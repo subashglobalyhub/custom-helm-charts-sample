@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.appLabel }}-deployment
+  labels:
+    app: {{ .Values.appLabel | default "dotcom-backend" }}
+    managed-by: {{ .Values.maintainer }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.appLabel | default "dotcom-backend" }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.appLabel | default "dotcom-backend" }}
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.imagePullSecretName | default "ecr-registry-secret" }}
+      containers:
+        - name: {{ .Values.appLabel }}-app
+          image: {{ required "Set .Values.image.repository" .Values.image.repository }}:{{ required "Set .Values.image.tag" .Values.image.tag }}
+          imagePullPolicy: IfNotPresent
+          {{/*           #### this section is commented will be used to customize based on each application if needed ####
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              echo "-------------------------------"
+              echo "k8s => starting php-fpm backend"
+              echo "-------------------------------"
+              php-fpm -D
+              #php-fpm -y /usr/local/etc/php-fpm.conf -R
+          */}}              
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+
+          {{/* #### this section is commented due to volumes are currenlty in research ####
+          volumeMounts:
+            - name: backend-config-env-volume
+              mountPath: {{ .Values.volumes.env.mountPath }}
+              subPath: {{ .Values.volumes.env.subPath }}
+            - name: backend-backend-log-volume
+              mountPath: {{ .Values.volumes.logs.mountPath }}
+              subPath: {{ .Values.volumes.logs.subPath }}
+          */}}
+
+      {{/* #### this section is commented due to volumes are currenlty in research ####
+      volumes:
+        - name: backend-config-env-volume
+          persistentVolumeClaim:
+            claimName: {{ .Values.volumes.env.pvcName }}
+        - name: backend-backend-log-volume
+          persistentVolumeClaim:
+            claimName: {{ .Values.volumes.logs.pvcName }}
+      */}}

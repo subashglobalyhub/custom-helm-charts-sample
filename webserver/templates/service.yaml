@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.appLabel }}-svc
+  labels:
+    app: {{ .Values.appLabel }}-service
+    managed-by: {{ .Values.maintainer }}
+spec:
+  selector:
+    app: {{ .Values.appLabel }}
+  type: {{ .Values.service.type }}
+  ports:
+    - name: backend-port
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort  }}
+  ipFamilyPolicy: SingleStack
+  ipFamilies: [IPv4]

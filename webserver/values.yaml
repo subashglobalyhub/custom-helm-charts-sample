@@ -1,0 +1,51 @@
+appLabel: dotcom-backend
+maintainer: backend-devops
+
+########################## deployments ########################
+image:
+  repository: "nginx"
+  tag: "latest"          
+# imagePullSecretName: ecr-registry-secret  # will be used for private repository
+resources:
+  requests:
+    cpu: "250m"
+    memory: "600Mi"
+  limits:
+    cpu: "500m"
+    memory: "900Mi"
+
+# volumes:
+#   env:
+#     pvcName: nfs-backend-config-pvc
+#     mountPath: /backend/backend/.env
+#     subPath: backend.env
+#   logs:
+#     pvcName: nfs-backend-log-pvc
+#     mountPath: /var/log/nginx
+#     subPath: backend-backend-log
+
+######################## service ###########################################
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+############################ Horizontal pod autoscaling ####################
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 3
+  cpu:
+    targetAverageUtilization: 75
+  scaleUp:
+    stabilizationWindowSeconds: 120
+    podsStep: 2
+  scaleDown:
+    stabilizationWindowSeconds: 300
+    podsStep: 1
+
+##################### Ingress for public traffic
+ingress:
+  host: backend.domain.com
+  tls:
+    secretName: backend-tls-secret
